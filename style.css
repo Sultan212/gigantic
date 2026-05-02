@@ -1,0 +1,70 @@
+body {
+  margin: 0;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #0f172a;
+  font-family: Arial, sans-serif;
+}
+
+.menu-container {
+  position: relative;
+}
+
+.menu {
+  position: relative;
+  width: 100px;
+  height: 100px;
+}
+
+/* Ana buton */
+.main-btn {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: none;
+  background: #22c55e;
+  color: white;
+  font-size: 24px;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  cursor: pointer;
+}
+
+/* Yan butonlar */
+.item {
+  position: absolute;
+  width: 120px;
+  height: 50px;
+  border-radius: 30px;
+  border: none;
+  background: #3b82f6;
+  color: white;
+  opacity: 0;
+  transform: scale(0);
+  transition: 0.3s;
+}
+
+/* Açılma pozisyonları */
+.menu.active .item1 {
+  transform: translate(-130px, -60px) scale(1);
+  opacity: 1;
+}
+
+.menu.active .item2 {
+  transform: translate(110px, -60px) scale(1);
+  opacity: 1;
+}
+
+.menu.active .item3 {
+  transform: translate(-130px, 80px) scale(1);
+  opacity: 1;
+}
+
+.menu.active .item4 {
+  transform: translate(110px, 80px) scale(1);
+  opacity: 1;
+}
