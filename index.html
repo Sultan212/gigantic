@@ -1,26 +1,479 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Radial Menu</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Radial Menü | Döner Oval Butonlar</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none; /* Mobilde tıklama highlight'ını azaltır */
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(145deg, #1a2a3a 0%, #0f1a24 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            padding: 20px;
+            margin: 0;
+        }
+
+        /* Ana konteyner – menü sistemi */
+        .menu-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* mobil dokunmatik alan rahat olsun */
+            touch-action: manipulation;
+        }
+
+        /* Tüm butonlar için ortak absolute yapı */
+        .menu-btn {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.32s cubic-bezier(0.34, 1.2, 0.64, 1);
+            border: none;
+            background: none;
+            font-size: 1.8rem;
+            font-weight: 500;
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+            backdrop-filter: blur(2px);
+        }
+
+        /* Ana buton (yuvarlak) */
+        .main-button {
+            width: 85px;
+            height: 85px;
+            background: radial-gradient(circle at 30% 25%, #ff9a3c, #ff6d00);
+            border-radius: 50%;
+            z-index: 20;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.4), 0 0 0 3px rgba(255, 220, 150, 0.5);
+            font-size: 2.5rem;
+            color: white;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        /* aktif/dokunma efekti */
+        .main-button:active {
+            transform: translate(-50%, -50%) scale(0.94);
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Oval butonlar (kapalı hal: görünmez, tıklanamaz, scale 0) */
+        .oval-btn {
+            width: 92px;
+            height: 58px;
+            background: radial-gradient(ellipse at 35% 40%, #2ecc71, #1e8f4e);
+            border-radius: 50%;
+            /* oval şekil için genişlik/yükseklik farklı + border-radius 50% -> mükemmel elips */
+            color: white;
+            font-size: 1.8rem;
+            font-weight: bold;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(255,255,200,0.3) inset;
+            backdrop-filter: blur(4px);
+            text-shadow: 0 1px 2px black;
+            transition: all 0.28s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            transform: translate(-50%, -50%) scale(0);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 12;
+            will-change: transform, opacity;
+        }
+
+        /* Açık menü durumunda oval butonlar */
+        .menu-container.open .oval-btn {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Her bir oval butonun farklı konumları (ana butona bitişik, hafif bindirmeli) 
+           Ana buton yarıçapı ~42.5px, oval yarı genişliği 46px, yarı yüksekliği 29px
+           Bindirme efekti için merkezler arası mesafeler overlap olacak şekilde ayarlandı.
+           Dört köşeye (çapraz) yerleşim – her biri ana butonun etrafını sarar ve ona bileşiktir.
+        */
+
+        /* Sağ-üst (1. buton) */
+        .oval-btn-1 {
+            left: calc(50% + 48px);
+            top: calc(50% - 48px);
+        }
+
+        /* Sol-üst (2. buton) */
+        .oval-btn-2 {
+            left: calc(50% - 48px);
+            top: calc(50% - 48px);
+        }
+
+        /* Sol-alt (3. buton) */
+        .oval-btn-3 {
+            left: calc(50% - 48px);
+            top: calc(50% + 48px);
+        }
+
+        /* Sağ-alt (4. buton) */
+        .oval-btn-4 {
+            left: calc(50% + 48px);
+            top: calc(50% + 48px);
+        }
+
+        /* Hover ve aktif dokunma efektleri (mobilde de tepki verir) */
+        .oval-btn:active {
+            transform: translate(-50%, -50%) scale(0.92);
+            filter: brightness(1.05);
+            transition-duration: 0.08s;
+        }
+
+        /* buton içindeki emojileri / ikonları ortalama */
+        .oval-btn span, .main-button span {
+            display: block;
+            line-height: 1;
+        }
+
+        /* Mobil cihazlar için buton boyutlarını ve offset'i hafif uyarla (küçük ekranlarda rahat tıklama) */
+        @media (max-width: 500px) {
+            .menu-container {
+                width: 280px;
+                height: 280px;
+            }
+            .main-button {
+                width: 75px;
+                height: 75px;
+                font-size: 2.2rem;
+            }
+            .oval-btn {
+                width: 80px;
+                height: 52px;
+                font-size: 1.6rem;
+            }
+            /* küçük ekranda offset mesafesini azaltarak bileşik görünümü koru */
+            .oval-btn-1 {
+                left: calc(50% + 42px);
+                top: calc(50% - 42px);
+            }
+            .oval-btn-2 {
+                left: calc(50% - 42px);
+                top: calc(50% - 42px);
+            }
+            .oval-btn-3 {
+                left: calc(50% - 42px);
+                top: calc(50% + 42px);
+            }
+            .oval-btn-4 {
+                left: calc(50% + 42px);
+                top: calc(50% + 42px);
+            }
+        }
+
+        /* çok küçük ekranlar (max 380px) */
+        @media (max-width: 380px) {
+            .main-button {
+                width: 68px;
+                height: 68px;
+                font-size: 2rem;
+            }
+            .oval-btn {
+                width: 72px;
+                height: 48px;
+                font-size: 1.4rem;
+            }
+            .oval-btn-1 {
+                left: calc(50% + 36px);
+                top: calc(50% - 36px);
+            }
+            .oval-btn-2 {
+                left: calc(50% - 36px);
+                top: calc(50% - 36px);
+            }
+            .oval-btn-3 {
+                left: calc(50% - 36px);
+                top: calc(50% + 36px);
+            }
+            .oval-btn-4 {
+                left: calc(50% + 36px);
+                top: calc(50% + 36px);
+            }
+        }
+
+        /* opsiyonel: menü açıkken arka plana hafif efekt */
+        .menu-container.open .main-button {
+            box-shadow: 0 0 0 3px #ffd966, 0 12px 28px black;
+            background: radial-gradient(circle at 30% 25%, #ffb347, #ff5e00);
+        }
+
+        /* footer gibi not (isteğe bağlı) */
+        .info-text {
+            position: fixed;
+            bottom: 18px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 0.75rem;
+            color: rgba(255,255,210,0.6);
+            background: rgba(0,0,0,0.3);
+            padding: 6px;
+            backdrop-filter: blur(4px);
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            pointer-events: none;
+        }
+        .info-text a {
+            color: #ffb347;
+            text-decoration: none;
+            pointer-events: auto;
+        }
+    </style>
 </head>
 <body>
 
-<div class="menu-container">
-  
-  <div class="menu" id="menu">
-    <button class="item item1">1</button>
-    <button class="item item2">2</button>
-    <button class="item item3">3</button>
-    <button class="item item4">4</button>
+<div class="menu-container" id="radialMenu">
+    <!-- Ana yuvarlak buton (menü toggle) -->
+    <button class="menu-btn main-button" id="mainToggleBtn" aria-label="Menüyü aç/kapat">
+        <span>☰</span>
+    </button>
 
-    <button class="main-btn" onclick="toggleMenu()">☰</button>
-  </div>
-
+    <!-- 4 Oval buton – bileşik şekilde ana butonun etrafında konumlanmış, 
+         her biri ana butona bitişik (bindirmeli) ve oval yapıda -->
+    <button class="menu-btn oval-btn oval-btn-1" data-action="action1" aria-label="Eylem 1">
+        <span>📸</span>
+    </button>
+    <button class="menu-btn oval-btn oval-btn-2" data-action="action2" aria-label="Eylem 2">
+        <span>🎵</span>
+    </button>
+    <button class="menu-btn oval-btn oval-btn-3" data-action="action3" aria-label="Eylem 3">
+        <span>❤️</span>
+    </button>
+    <button class="menu-btn oval-btn oval-btn-4" data-action="action4" aria-label="Eylem 4">
+        <span>⭐</span>
+    </button>
+</div>
+<div class="info-text">
+    ✨ Merkez butona dokun → yan butonlar açılır/kapanır | Oval butonlar ana butona bileşiktir ✨
 </div>
 
-<script src="script.js"></script>
+<script>
+    (function() {
+        // DOM elementleri
+        const menuContainer = document.getElementById('radialMenu');
+        const mainBtn = document.getElementById('mainToggleBtn');
+        
+        // Dört oval butonu seç (hepsi)
+        const ovalButtons = document.querySelectorAll('.oval-btn');
+        
+        // Menü açık/kapalı durumu (başlangıçta kapalı)
+        let isMenuOpen = false;
+        
+        // Ana butona tıklama / dokunma fonksiyonu (toggle menü)
+        function toggleMenu() {
+            if (isMenuOpen) {
+                // Kapat: open class'ını kaldır
+                menuContainer.classList.remove('open');
+                isMenuOpen = false;
+                // Kullanılabilirlik: butonlara aria-expanded bilgisi (opsiyonel)
+                mainBtn.setAttribute('aria-expanded', 'false');
+            } else {
+                // Aç: open class'ını ekle
+                menuContainer.classList.add('open');
+                isMenuOpen = true;
+                mainBtn.setAttribute('aria-expanded', 'true');
+            }
+        }
+        
+        // Event listener (hem click hem touch için)
+        mainBtn.addEventListener('click', function(e) {
+            e.stopPropagation();  // olay yayılmasını engelle
+            toggleMenu();
+        });
+        
+        // Mobilde touchstart ile de tepki versin (ancak click zaten çalışır, ama ekstra güvenlik)
+        mainBtn.addEventListener('touchstart', function(e) {
+            // sadece dokunma anında click tetiklenir, çift olayı engellemek için preventDefault gerekmez
+            // ancak tarayıcıların 300ms gecikmesi için modern cihazlar sorunsuz
+            e.preventDefault();  // küçük önlem: sayfa kaymasını engellemez ama click tetikler
+            // click event'i ateşlenecek, aynı işlemi yapmamak için sadece click'e güvenebiliriz.
+            // yine de manuel çağırmaya gerek yok, click çalışacak.
+        });
+        
+        // Oval butonlara tıklama işlevleri (ileriye dönük yapı)
+        // Her bir butona özel eylem tanımla (şimdilik konsol + alert ama sonra geliştirilebilir)
+        // Kullanıcı rahatça ilerlesin, uyarı vermek yerine görsel geri bildirim koyuyoruz.
+        // Ayrıca tıklanınca menünün kapanması istenirse yapılabilir, ancak spesifikasyon yoksa kullanıcı istediğinde manuel kapatsın.
+        // Fakat UX gereği butona tıklayınca küçük bildirim ve menü kapanabilir veya açık kalabilir. 
+        // Şimdilik butonlar görevini yapsın ve menüyü KAPATMA (ileride opsiyonel). Ama ihtiyaç halinde yorum satırında alternatif sunalım.
+        // Kullanıcının talebi "ortadaki butona basınca açılıp kapansın" yan butonlar işlev yapsın şimdilik.
+        // Her oval butona ayrı ayrı basit geri bildirim ekliyoruz, menü durumunu değiştirmiyoruz.
+        
+        // Ama isteğe bağlı: yan butona tıklayınca kullanıcıya seçim yaptığını hissettir, menü açık kalsın.
+        // Konsola da yazdıralım ki geliştirme esnasında ne olduğu görülsün.
+        function handleOvalClick(actionId, btnElement) {
+            // Geri bildirim amaçlı buton üzerinde kısa bir efekt (pulse)
+            btnElement.style.transform = 'translate(-50%, -50%) scale(0.92)';
+            setTimeout(() => {
+                if (menuContainer.classList.contains('open')) {
+                    btnElement.style.transform = 'translate(-50%, -50%) scale(1)';
+                } else {
+                    btnElement.style.transform = 'translate(-50%, -50%) scale(0)';
+                }
+            }, 120);
+            
+            // İçerik mesajı – kullanıcıya hangi butona bastığını gösterir (şimdilik)
+            let actionMessage = '';
+            switch(actionId) {
+                case 'action1':
+                    actionMessage = '📸 Kamera / Galeri eklentisi hazırlanıyor';
+                    break;
+                case 'action2':
+                    actionMessage = '🎵 Müzik oynatıcı yakında burada';
+                    break;
+                case 'action3':
+                    actionMessage = '❤️ Favorilerim (ileriki adım)';
+                    break;
+                case 'action4':
+                    actionMessage = '⭐ Özel yıldız butonu';
+                    break;
+                default:
+                    actionMessage = 'Butona tıklandı!';
+            }
+            
+            // Konsola yazdır (geliştirici ve test için)
+            console.log(`[Menü Etkileşim] ${actionMessage} - buton: ${actionId}`);
+            
+            // Hafif bildirim olarak tost mesajı (kullanıcıya görünür)
+            showToastMessage(actionMessage);
+        }
+        
+        // Minimal tost mesajı (mobil & masaüstü uyumlu)
+        let toastTimeout = null;
+        function showToastMessage(message) {
+            // var olan bir tostu temizle
+            const existingToast = document.querySelector('.custom-toast');
+            if(existingToast) {
+                existingToast.remove();
+                if(toastTimeout) clearTimeout(toastTimeout);
+            }
+            
+            const toast = document.createElement('div');
+            toast.className = 'custom-toast';
+            toast.innerText = message;
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 70px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0,0,0,0.85);
+                backdrop-filter: blur(12px);
+                color: #ffecb3;
+                padding: 12px 20px;
+                border-radius: 60px;
+                font-size: 0.9rem;
+                font-weight: 500;
+                z-index: 9999;
+                white-space: nowrap;
+                max-width: 85vw;
+                white-space: normal;
+                text-align: center;
+                font-family: system-ui, 'Segoe UI', monospace;
+                letter-spacing: 0.5px;
+                border: 1px solid rgba(255,200,100,0.4);
+                box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+                pointer-events: none;
+                animation: fadeInUp 0.25s ease;
+            `;
+            document.body.appendChild(toast);
+            
+            // animasyon ekle (keyframes)
+            if(!document.querySelector('#toastKeyframeStyle')) {
+                const styleSheet = document.createElement('style');
+                styleSheet.id = 'toastKeyframeStyle';
+                styleSheet.textContent = `
+                    @keyframes fadeInUp {
+                        from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+                        to { opacity: 1; transform: translateX(-50%) translateY(0); }
+                    }
+                `;
+                document.head.appendChild(styleSheet);
+            }
+            
+            toastTimeout = setTimeout(() => {
+                if(toast && toast.remove) toast.remove();
+            }, 1800);
+        }
+        
+        // Her oval butona tıklama olayını ekle (click)
+        ovalButtons.forEach(btn => {
+            // Hangi buton olduğunu belirleme (data-action veya sınıf)
+            let action = '';
+            if(btn.classList.contains('oval-btn-1')) action = 'action1';
+            else if(btn.classList.contains('oval-btn-2')) action = 'action2';
+            else if(btn.classList.contains('oval-btn-3')) action = 'action3';
+            else if(btn.classList.contains('oval-btn-4')) action = 'action4';
+            
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();  // Olayın ana menüye gitmesini engelle (menü kapanmasın)
+                // Menü açık değilken butonlar görünmez ve tıklanamaz (pointer-events auto değil), 
+                // ancak güvenlik için ekstra kontrol: eğer menü açık değilse hiç işlem yapma
+                if(!menuContainer.classList.contains('open')) {
+                    return;
+                }
+                handleOvalClick(action, btn);
+            });
+            
+            // Mobil cihazlarda touchstart ile çift tetiklemeyi önlemek için pasif olay 
+            btn.addEventListener('touchstart', function(e) {
+                // sadece tıklama ile aynı işlevi yapmasın; ancak click zaten calisir. preventDefault sadece sayfayi kaydirmaz.
+                // zaten butonlar tıklanabilir, fazladan işlem yapma, sadece click'e izin ver.
+                // Hiç bir şey yapmayalım, click yeterli.
+            }, { passive: true });
+        });
+        
+        // Dışarı tıklayınca menüyü kapat? Belirtilmemiş ancak isteğe bağlı iyileştirme yapabiliriz.
+        // Fakat kullanıcı deneyimi için genelde radyal menü açıkken dışarı tıklayınca kapanması beklenebilir.
+        // Uygulama daha rahat olsun: Belgeye tıklayınca (menü dışına) açık menüyü kapat.
+        // Ancak butonlara tıklayınca kapanmamalı, sadece ana menü dışındaki boş alanlar.
+        document.addEventListener('click', function(e) {
+            // Menü açık mı? ve tıklanan eleman menü container içinde değil mi? ve tıklanan ana buton da değil mi?
+            if (isMenuOpen && menuContainer.contains(e.target) === false) {
+                // dışarı tıklandı, menüyü kapat
+                toggleMenu();
+            }
+        });
+        
+        // Aynı zamanda dokunmatik cihazlar için touch event (gövdeye) kapatma
+        document.addEventListener('touchstart', function(e) {
+            if (isMenuOpen && !menuContainer.contains(e.target)) {
+                toggleMenu();
+            }
+        }, { passive: true });
+        
+        // Başlangıç durumunu ayarla (open class'ı yok)
+        menuContainer.classList.remove('open');
+        mainBtn.setAttribute('aria-expanded', 'false');
+        
+        // Menü başlangıç kapalıyken oval butonların transform scale(0) ve opacity:0 olması zaten css'te mevcut.
+        // Butonlara geçici debug için varsayılan değerler atandı.
+        
+        // Kullanıcının dokunmatik cihazlarda butonların tıklama bölgesini iyileştirmek için 
+        // css'te -webkit-tap-highlight-color zaten ayarlandı.
+        
+        // Sözel talimat: "ilerletiriz" notuyla bu temel yapı işlevsel.
+        console.log('Radial menü hazır. Ortadaki buton ile açıp/kapat, yan oval butonlar görevini yapar.');
+    })();
+</script>
 </body>
 </html>
